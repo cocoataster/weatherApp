@@ -75,7 +75,7 @@ class CurrentWeather {
                     if let currentTemperature = main["temp"] as? Double {
                         
                         let kelvinToCelcius = currentTemperature - 273.15
-                        self._currentTemp = kelvinToCelcius
+                        self._currentTemp = round(10*kelvinToCelcius)/10
                         
                     }
                 }
