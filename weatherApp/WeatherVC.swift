@@ -31,60 +31,84 @@ class WeatherVC: UIViewController, UITableViewDelegate, UITableViewDataSource, C
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        locationManager.distanceFilter = 2.2
+        
         tableView.delegate = self
         tableView.dataSource = self
         
+        currentWeather = CurrentWeather()
     }
     
     override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         locationStatus()
     }
     
     func locationStatus() {
         if CLLocationManager.locationServicesEnabled() {
             let status = CLLocationManager.authorizationStatus()
+            
             switch status {
-            case .denied, .restricted:
-                let alertController = UIAlertController(title: "Alert", message: "Auth Denied", preferredStyle: .alert)
-                let action = UIAlertAction(title: "Ok", style: .cancel, handler: nil)
-                alertController.addAction(action)
-                self.present(alertController, animated: true, completion: nil)
-            case .notDetermined:
-                self.locationManager.requestWhenInUseAuthorization()
-                self.locationManager.delegate = self
-                self.locationManager.requestLocation()
-            default:
-                self.locationManager.delegate = self
-                self.locationManager.requestLocation()
+                case .denied, .restricted:
+                    self.showAlertWithMessage(message: "Your have no auth")
+                case .notDetermined:
+                    self.locationManager.requestWhenInUseAuthorization()
+                    self.startUpdatingLocation()
+                default:
+                    self.startUpdatingLocation()
             }
         }
         else {
-            let alertController = UIAlertController(title: "Alert", message: "Location Services is disabled.", preferredStyle: .alert)
-            let action = UIAlertAction(title: "Ok", style: .cancel, handler: nil)
-            alertController.addAction(action)
-            self.present(alertController, animated: true, completion: nil)
+            self.showAlertWithMessage(message: "Location services are disabled")
         }
     }
     
+    //UIAlert
+    func showAlertWithMessage(message: String) {
+        let alertController = UIAlertController(title: "Alert", message: message, preferredStyle: .alert)
+        let action = UIAlertAction(title: "Ok", style: .cancel, handler: nil)
+        alertController.addAction(action)
+        self.present(alertController, animated: true, completion: nil)
+    }
+    
+    //Start updating location
+    func startUpdatingLocation() {
+        self.locationManager.delegate = self
+        self.locationManager.requestLocation()
+        self.locationManager.startMonitoringSignificantLocationChanges()
+    }
+    
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        if let newLocation = locations.first {
+        if let newLocation = locations.last {
             Location.shareInstance.latitude = newLocation.coordinate.latitude
             Location.shareInstance.longitude = newLocation.coordinate.longitude
+            
         }
         self.updateForecast()
     }
     
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        //error
+    }
+    
     func updateForecast() {
-        currentWeather = CurrentWeather()
         currentWeather.downloadWeatherDetails {
             self.updateMainUI()
             self.downloadForecastData{}
         }
     }
     
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        //error
+    //Main UI
+    
+    func updateMainUI() {
+        dateLabel.text = currentWeather.date
+        currentTempLabel.text = "\(currentWeather.currentTemp)"
+        currentWeatherTypeLabel.text = currentWeather.weatherType
+        locationLabel.text = currentWeather.cityName
+        currentWeatherImage.image = UIImage(named: currentWeather.weatherType)
     }
+    //Forecast Data
     
     func downloadForecastData(completed: @escaping DownloadCompleted) {
         //Download tableview data
@@ -107,6 +131,8 @@ class WeatherVC: UIViewController, UITableViewDelegate, UITableViewDataSource, C
         }
     }
     
+    //TableView
+    
     func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
@@ -127,14 +153,6 @@ class WeatherVC: UIViewController, UITableViewDelegate, UITableViewDataSource, C
         } else {
             return WeatherCell()
         }
-    }
-    
-    func updateMainUI() {
-        dateLabel.text = currentWeather.date
-        currentTempLabel.text = "\(currentWeather.currentTemp)"
-        currentWeatherTypeLabel.text = currentWeather.weatherType
-        locationLabel.text = currentWeather.cityName
-        currentWeatherImage.image = UIImage(named: currentWeather.weatherType)
     }
 }
 
