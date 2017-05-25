@@ -28,11 +28,11 @@ class CurrentWeather {
         }
         
         let dateFormatter = DateFormatter()
-        dateFormatter.dateStyle = .long
+        dateFormatter.dateStyle = .medium
         dateFormatter.timeStyle = .none
         
         let currentDate = dateFormatter.string(from: Date())
-        self._date = "Today, " + currentDate
+        self._date = "Hoy, " + currentDate
         
         return _date
         

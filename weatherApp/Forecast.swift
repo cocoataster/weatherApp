@@ -47,10 +47,10 @@ class Forecast {
     init (weatherDict: Dictionary<String, AnyObject>) {
         if let temp = weatherDict["temp"] as? Dictionary<String, AnyObject> {
             if let minTemp = temp["min"] as? Double {
-                self._lowTemp = "\(minTemp - 273.15)"
+                self._lowTemp = "\(round(10*(minTemp - 273.15))/10)"
             }
             if let maxTemp = temp["max"] as? Double {
-                self._highTemp = "\(maxTemp - 273.15)"
+                self._highTemp = "\(round(10*(maxTemp - 273.15))/10)"
             }
         }
         if let weather = weatherDict["weather"] as? [Dictionary<String, AnyObject>] {
@@ -65,7 +65,7 @@ class Forecast {
             dateFormatter.dateStyle = .full
             dateFormatter.dateFormat = "EEEE"
             dateFormatter.timeStyle = .none
-            self._date = unixConvertedDate.dayOfTheWeek()
+            self._date = unixConvertedDate.dayOfTheWeek().capitalized
         }
     }
     
